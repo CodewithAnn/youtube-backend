@@ -7,7 +7,7 @@ const router = Router();
 router.route("/register").post(
   upload.fields([
     {
-      name: "profilePic",
+      name: "profilePic", // use field name in frontend profilePic not avatar.
       maxCount: 1,
     },
     {

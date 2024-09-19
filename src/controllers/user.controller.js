@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import uploadOnCloudinary from "../utils/cloudnaryService.js";
 import send from "express/lib/response.js";
-import {ApiResponse} from "../utils/ApiResponse.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req, res) => {
   // get user's information
@@ -19,10 +19,19 @@ const registerUser = asyncHandler(async (req, res) => {
   if (exitedUser) {
     throw new ApiError(400, "User already exists");
   }
-
+  console.log(req.files)
   // check for avatar and coverImage
   const avatarLocalpath = req.files?.profilePic[0]?.path;
-  const coverImageLocalpath = req.files?.coverPic[0]?.path;
+  // const coverImageLocalpath = req.files?.coverPic[0]?.path;
+
+  // let check for is coverPic is empty?
+  let coverImageLocalpath;
+  if (req.files.coverPic && req.files.coverPic[0]) {
+    coverImageLocalpath = req.files.coverPic[0]?.path;
+  } else {
+    coverImageLocalpath = "";
+  }
+
 
   if (!avatarLocalpath) {
     throw new ApiError(400, "Avatar files is require");
@@ -53,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to create user");
   }
 
-  
+
 
   console.log("username :", username);
   console.log("fullName :", fullName);

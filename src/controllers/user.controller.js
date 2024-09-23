@@ -5,7 +5,7 @@ import uploadOnCloudinary from "../utils/cloudnaryService.js";
 import send from "express/lib/response.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import res from "express/lib/response.js";
-
+import jwt from "jsonwebtoken"
 const registerUser = asyncHandler(async (req, res) => {
   // get user's information
   const { username, fullName, email, password } = req.body;
@@ -181,4 +181,40 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "user log out "))
 })
 
-export { registerUser, loginUser, logoutUser };
+
+// reaccess the refresh token after session completion 
+const accessRefreshToken = asyncHandler(async (req, res) => {
+
+  // get the refresh token from cookie
+  const incomingRefreshToken = req.cookies.accessToken || req.body.accessToken
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, " Authorization failed")
+  }
+
+  //verify the token(decord)
+  const decodedtoken = await jwt.verify(incomingRefreshToken, REFRESH_TOKEN_SECRET)
+  if (!decodedtoken) {
+    throw new ApiError(401, " something wrong with Refresh Token")
+  }
+  // get user
+  const user = await User.findById(decodedtoken?._id)
+  if (!user) {
+    throw new ApiError(401, "User not found")
+  }
+  // validate the decoded token with stored refresh token
+  if (incomingRefreshToken !== user._id.refreshToken) {
+    throw new ApiError(401, "Token doesn't matched ")
+  }
+  // generate new access token and refresh token
+  const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id)
+  // send the new access token and refresh token to client
+  const options = { httpOnly: true, secure: true }
+  res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", newRefreshToken, options)
+    .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Reaccessed successfully"))
+
+
+})
+
+export { registerUser, loginUser, logoutUser, accessRefreshToken };

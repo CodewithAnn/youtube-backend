@@ -86,6 +86,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     // generate access and refresh token
     const accessToken = await user.generateAccessToken();
     const refreshToken = await user.generateRefreshToken();
+    console.log("AccessToken:", accessToken, "RefreshToken:", refreshToken);
     // save refresh token in database
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
@@ -129,6 +130,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
   // call generate access and refresh token 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+  console.log("AccessToken:", accessToken, "RefreshToken:", refreshToken);
+
 
   const logedInUser = await User.findById(user._id).select("-password -refreshToken")
   console.log(logedInUser);
@@ -143,14 +146,14 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true
   }
   // cookies 
-  
- return res.status(200).cookie("accessToken", accessToken, options)
- .cookie("refreshToken", refreshToken, options)
- .json( new ApiResponse(
-   200,
-   { user: logedInUser, accessToken, refreshToken },
-   "Login successfully"
- ))
+
+  return res.status(200).cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(
+      200,
+      { user: logedInUser, accessToken, refreshToken },
+      "Login successfully"
+    ))
 });
 
 
@@ -175,7 +178,7 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 
   res.status(200).clearCookie("accessToken", options).clearCookie("refreshToken", options)
-    .json(ApiResponse(200, "user log out "))
+    .json(new ApiResponse(200, "user log out "))
 })
 
 export { registerUser, loginUser, logoutUser };

@@ -7,6 +7,8 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
         // check for the token 
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+        console.log("Token:", token);
+
         if (!token) {
             throw new ApiError(
                 401,
@@ -14,11 +16,13 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
             )
         }
 
+
+
         // validate token
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
         // find user 
-        const user = await User.findById(decoded._id).select("-password -refreshToken")
+        const user = await User.findById(decoded?._id).select("-password -refreshToken")
 
         if (!user) {
             throw new ApiError(401, "Invalid access token. Please log in again.")
